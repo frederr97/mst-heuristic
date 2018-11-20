@@ -10,12 +10,12 @@ def initialize():
 	linha = arq.readline()
 	vertices, arestas = linha.split()		# Receive vertices and arestas
 	grafo.add_vertices(int(vertices))
-	linha = arq.readline()				# First -1 flag
+	linha = arq.readline()			# First -1 flag
 	cont = 0
 	# Receiving the position and weight of vertices
 	for linha in arq:
 		if len(linha.split()) < 3:
-			break	
+			break
 		else:
 			pos_x, pos_y, peso = linha.split()
 			grafo.vs[cont]["x"] = int(pos_x)
@@ -26,8 +26,8 @@ def initialize():
 	for linha in arq:
 		v1, v2, peso = linha.split()
 		grafo.add_edges([(int(v1),int(v2))])
-		grafo.es[grafo.get_eid(int(v1),int(v2))]["weight"] = int(peso)  
-
+		grafo.es[grafo.get_eid(int(v1),int(v2))]["weight"] = int(peso)
+	
 	arq.close()
 	return grafo
 
@@ -54,12 +54,11 @@ def prim(grafo):
 	for i in range(len(arestas_arvore)):
 		arvore.add_edges([(arestas_arvore[i][0], arestas_arvore[i][1])])
 		print arestas_arvore[i]
-	print "O custo da AGM é ", custo	
-		
-
+	print "O custo da AGM é ", custo
+	
 def main():
 	grafo = initialize()
 	prim(grafo)
 
 if __name__ == '__main__':
-    main() 
+    main()
