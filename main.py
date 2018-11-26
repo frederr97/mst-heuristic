@@ -2,11 +2,18 @@
 # -*- coding: utf-8 -*-
 
 from igraph import *
-
+import os
 
 def initialize():
+    # Leitura e exibição do diretório de entrada
+    caminhos = [os.path.join("entrada/", nome) for nome in os.listdir("entrada/")]
+    arquivos = [arq for arq in caminhos if os.path.isfile(arq)]
+    for i in range(len(arquivos)):
+        print i, " - ", arquivos[i]
+    opcao = raw_input("\nInsira o número equivalente à opção do arquivo que deseja determinar como entrada: ")
+    # Inicia a leitura do grafo
     grafo = Graph()
-    arq = open('teste.dat')
+    arq = open(arquivos[int(opcao)])
     linha = arq.readline()
     vertices, arestas = linha.split()            # Recebe a quantidade de vértices e arestas
     grafo.add_vertices(int(vertices))
@@ -54,12 +61,12 @@ def prim(grafo):
     # Cria a AGM com a lista de arestas obtidas
     for i in range(len(arestas_arvore)):
         arvore.add_edges([(arestas_arvore[i][0], arestas_arvore[i][1])])
-        print arestas_arvore[i]
 
-    print "O custo da AGM é ", custo
+    print "\nO custo da AGM gerada pelo algoritmo de Prim é %d.\n" % custo
 
 
 def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
     grafo = initialize()
     prim(grafo)
 
