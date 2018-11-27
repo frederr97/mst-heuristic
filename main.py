@@ -4,8 +4,10 @@
 import networkx as nx
 import os
 
+
 INF = 9999999
-custoTotalAGM = INF
+
+
 def initialize():
     # Leitura e exibição do diretório de entrada
     caminhos = [os.path.join("entrada/", nome) for nome in os.listdir("entrada/")]
@@ -69,22 +71,10 @@ def prim(grafo_residual, grafo):
     
     for i in range(len(arestas_arvore)):
         arvore.add_edge(arestas_arvore[i][0], arestas_arvore[i][1])
-    
+
     print "\nO custo da AGM gerada pelo algoritmo de Prim é %d.\n" % custo
     
     return custo, arestas_arvore, arvore, grafo
-'''
-def sum_of_costs_AGM(custo_parcial,custoAGM):
-    custo_parcial_Total = custo_parcial+ custoAGM
-    return custo_parcial
-
-def refinement(custo_parcial_Total,custoTotalAGM):
-    if custo_parcial_Total < custoTotalAGM:
-        custoTotalAGM = custo_parcial_Total
-        return True
-    else :
-        return False
-'''
 
 
 def calculates_cost(arvore, grafo):
@@ -97,34 +87,48 @@ def calculates_cost(arvore, grafo):
     for aresta in arvore.edges():
         v1, v2 = aresta
         custo_parcial += grafo[v1][v2]['weight']
-        
+
     return custo_parcial            
 
-'''
-def refinement_heuristic(grafo, arvore, custo):
+
+def refinement_heuristic(grafo, arvore, grafo_residual, custo):
+    custo = calculates_cost(arvore, grafo)
     # Função que remolda a AGM de acordo com o a heurística
     for vertice in range(grafo_residual.number_of_nodes()):
-        for neighbor in range(grafo_residual.degree(vertice))
-            if grafo_residual[vertice][neighbor]['added'] == False:
-                arvore.add_edge(vertice, neighbor)
-                grafo[vertice][neighbor]['added'] = True
-            # Verifica se a árvore possui ciclo com a nova aresta inserida
-            aux = nx.cycle_basis(arvore)
-            ciclo = [zip(nodes,(nodes[1:]+nodes[:1])) for nodes in aux]    
-            for i in ciclo[0]:
-                if i != arvore[vertice][neighbor]:
-                    arvore.remove_edge(i[0], i[1])
-                    custo_parcial = calculates_cost(arvore)
-'''
+        for neighbor in range(grafo_residual.degree(vertice)):
+            #print "zecas: ", vertice, neighbor
+            if (vertice != neighbor) and (grafo.has_edge(neighbor, vertice)):
+                if (not grafo[neighbor][vertice]['added']):           
+                        if grafo[vertice][neighbor]['added'] == False:
+                            arvore.add_edge(vertice, neighbor)
+                            grafo[vertice][neighbor]['added'] = True
+                        # Verifica se a árvore possui ciclo com a nova aresta inserida
+                        #print "par: ", vertice, neighbor
+                        #print nx.cycle_basis(arvore)    
+                        aux = nx.cycle_basis(arvore)
+                        ciclo = [zip(nodes,(nodes[1:]+nodes[:1])) for nodes in aux]
+
+                        for aresta in ciclo[0]:
+                            if aresta != arvore[vertice][neighbor]:
+                                arvore.remove_edge(aresta[0], aresta[1])
+                                custo_parcial = calculates_cost(arvore, grafo)
+                                if custo_parcial < custo:
+                                    custo = custo_parcial                       # Altera o custo se a AGM encontrada possuir menor custo
+                                else:
+                                    arvore.add_edge(aresta[0], aresta[1])       # Devolve a aresta inserida, caso o custo encontrado for maior que o atual
+
+    print "O custo da nova AGM gerada pela heurística de refinamento considerando o peso dos vértices é %d.\n" % custo
+
+    return arvore, custo
+
 
 def main():
     os.system('cls')
     grafo = initialize()
     grafo_residual = grafo.copy()
     custo, arestas_arvore, arvore, grafo = prim(grafo_residual, grafo)
-    custo_parcial = calculates_cost(arvore, grafo)
-    print custo_parcial
-    #refinement_heuristic(grafo, arvore, custo)
+    arvore, custo = refinement_heuristic(grafo, arvore, grafo_residual, custo)
+
 
 if __name__ == '__main__':
       main()  
