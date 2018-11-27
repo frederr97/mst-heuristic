@@ -87,35 +87,43 @@ def refinement(custo_parcial_Total,custoTotalAGM):
 '''
 
 
-def calculates_cost(arvore):
+def calculates_cost(arvore, grafo):
     custo_parcial = 0;
-    # Soma o custo das arestas da AGM com o custo dos vértices
+    # Soma o custo dos vértices não-folhas da AGM
     for vertice in arvore.nodes():
-        for neighbor in range(arvore.degree(vertice)):
-            custo_parcial += arvore[vertice][neighbor]
         if arvore.degree(vertice) > 1:
-            custo_parcial += arvore.node[vertice]['weight']
-
+            custo_parcial += grafo.node[vertice]['weight']
+    # Soma o custo das arestas da AGM ao custo parcial anterior
+    for aresta in arvore.edges():
+        v1, v2 = aresta
+        custo_parcial += grafo[v1][v2]['weight']
+        
     return custo_parcial            
 
-
+'''
 def refinement_heuristic(grafo, arvore, custo):
     # Função que remolda a AGM de acordo com o a heurística
-    for aresta in range(grafo.number_of_edges()):
-        if grafo[aresta]["added"] == False:
-            arvore.add_edges([(grafo.es[aresta].source, grafo.es[aresta].target)])
-
-
+    for vertice in range(grafo_residual.number_of_nodes()):
+        for neighbor in range(grafo_residual.degree(vertice))
+            if grafo_residual[vertice][neighbor]['added'] == False:
+                arvore.add_edge(vertice, neighbor)
+                grafo[vertice][neighbor]['added'] = True
+            # Verifica se a árvore possui ciclo com a nova aresta inserida
+            aux = nx.cycle_basis(arvore)
+            ciclo = [zip(nodes,(nodes[1:]+nodes[:1])) for nodes in aux]    
+            for i in ciclo[0]:
+                if i != arvore[vertice][neighbor]:
+                    arvore.remove_edge(i[0], i[1])
+                    custo_parcial = calculates_cost(arvore)
+'''
 
 def main():
     os.system('cls')
     grafo = initialize()
     grafo_residual = grafo.copy()
     custo, arestas_arvore, arvore, grafo = prim(grafo_residual, grafo)
-    custo_parcial = calculates_cost(arvore)
-    custoTotal= sum_of_costs_AGM(custo, custo_parcial)
-    boolean =  refinement(custoTotal, custoTotalAGM)
-    print boolean
+    custo_parcial = calculates_cost(arvore, grafo)
+    print custo_parcial
     #refinement_heuristic(grafo, arvore, custo)
 
 if __name__ == '__main__':
