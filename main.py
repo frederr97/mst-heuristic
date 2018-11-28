@@ -65,7 +65,6 @@ def prim(grafo_residual, grafo):
         v_add.append(menor_aresta[1])
         grafo_residual.remove_edge(menor_aresta[0], menor_aresta[1])
         grafo[menor_aresta[0]][menor_aresta[1]]['added'] = True
-        custo += menor_custo
         arvore.add_node(menor_aresta[1], weight=grafo_residual.node[menor_aresta[1]]['weight'])
 
     # Cria a AGM com a lista de arestas obtidas
@@ -73,9 +72,10 @@ def prim(grafo_residual, grafo):
     for i in range(len(arestas_arvore)):
         arvore.add_edge(arestas_arvore[i][0], arestas_arvore[i][1])
 
+    custo = calculates_cost(arvore, grafo)
     print "\nO custo da AGM gerada pelo algoritmo de Prim é %d.\n" % custo
     
-    return custo, arestas_arvore, arvore, grafo
+    return custo, arvore, grafo
 
 
 def calculates_cost(arvore, grafo):
@@ -92,20 +92,16 @@ def calculates_cost(arvore, grafo):
     return custo_parcial            
 
 
-def refinement_heuristic(grafo, arvore, grafo_residual, custo):
-    custo = calculates_cost(arvore, grafo)
+def refinement_heuristic(grafo, arvore, custo):
     # Função que remolda a AGM de acordo com o a heurística
-    for vertice in range(grafo_residual.number_of_nodes()):
-        for neighbor in range(grafo_residual.degree(vertice)):
-            #print "zecas: ", vertice, neighbor
+    for vertice in range(grafo.number_of_nodes()):
+        for neighbor in range(grafo.degree(vertice)):
             if (vertice != neighbor) and (grafo.has_edge(neighbor, vertice)):
                 if (not grafo[neighbor][vertice]['added']):           
                     if grafo[vertice][neighbor]['added'] == False:
                         arvore.add_edge(vertice, neighbor)
                         grafo[vertice][neighbor]['added'] = True
-                    # Verifica se a árvore possui ciclo com a nova aresta inserida
-                    #print "par: ", vertice, neighbor
-                    #print nx.cycle_basis(arvore)    
+                    # Verifica se a árvore possui ciclo com a nova aresta inserida   
                     aux = nx.cycle_basis(arvore)
                     ciclo = [zip(nodes,(nodes[1:]+nodes[:1])) for nodes in aux]                    
                     if len(ciclo)>0:
@@ -126,10 +122,14 @@ def refinement_heuristic(grafo, arvore, grafo_residual, custo):
 def make_set(vertice):
     parent[vertice] = vertice
     rank[vertice] = 0
+
+
 def find(vertice):
     if parent[vertice] != vertice:
         parent[vertice] = find(parent[vertice])
     return parent[vertice]
+
+
 def union(vertice1, vertice2):
     root1 = find(vertice1)
     root2 = find(vertice2)
@@ -140,6 +140,8 @@ def union(vertice1, vertice2):
             parent[root1] = root2
         if rank[root1] == rank[root2]:
             rank[root2] += 1
+
+
 def kruskal(grafo):
     peso=0
     arestas=[]
@@ -154,7 +156,6 @@ def kruskal(grafo):
         edge = (grafo[vertice1][vertice2]['weight'],vertice1,vertice2)
         arestas.append(edge)
         arestas.sort()
-    #print arestas
     for aresta in arestas:
         pesosA,vertice1, vertice2 = aresta
         if find(vertice1) != find(vertice2):
@@ -162,6 +163,8 @@ def kruskal(grafo):
             agm.add(aresta)
             peso += pesosA
     return peso,sorted(agm)
+
+
 def return_edges_Kruskal(grafo,mst):
     arvore = nx.Graph()
     new_mst=[]
@@ -177,13 +180,13 @@ def return_edges_Kruskal(grafo,mst):
 def main():
     os.system('cls')
     grafo = initialize()
-    peso, mst = kruskal(grafo)
-    arvore,mst = return_edges_Kruskal(grafo,mst)
+    #peso, mst = kruskal(grafo)
+    #arvore,mst = return_edges_Kruskal(grafo,mst)
     grafo_residual = grafo.copy()
-    print 'Peso sem soma de nada da AGM', peso,'\n'
-    #custo, arestas_arvore, arvore, grafo = prim(grafo_residual, grafo)
-    arvore, custo = refinement_heuristic(grafo, arvore, grafo_residual, peso)
-
+    custo, arvore, grafo = prim(grafo_residual, grafo)
+    arvore, custo = refinement_heuristic(grafo, arvore, custo)
+    for edge in arvore.edges():
+        print edge
 
 if __name__ == '__main__':
       main()  
