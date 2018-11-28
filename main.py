@@ -6,7 +6,8 @@ import os
 
 
 INF = 9999999
-
+parent = dict()
+rank = dict()
 
 def initialize():
     # Leitura e exibição do diretório de entrada
@@ -99,17 +100,17 @@ def refinement_heuristic(grafo, arvore, grafo_residual, custo):
             #print "zecas: ", vertice, neighbor
             if (vertice != neighbor) and (grafo.has_edge(neighbor, vertice)):
                 if (not grafo[neighbor][vertice]['added']):           
-                        if grafo[vertice][neighbor]['added'] == False:
-                            arvore.add_edge(vertice, neighbor)
-                            grafo[vertice][neighbor]['added'] = True
-                        # Verifica se a árvore possui ciclo com a nova aresta inserida
-                        #print "par: ", vertice, neighbor
-                        #print nx.cycle_basis(arvore)    
-                        aux = nx.cycle_basis(arvore)
-                        ciclo = [zip(nodes,(nodes[1:]+nodes[:1])) for nodes in aux]
-
-                        for aresta in ciclo[0]:
-                            if aresta != arvore[vertice][neighbor]:
+                    if grafo[vertice][neighbor]['added'] == False:
+                        arvore.add_edge(vertice, neighbor)
+                        grafo[vertice][neighbor]['added'] = True
+                    # Verifica se a árvore possui ciclo com a nova aresta inserida
+                    #print "par: ", vertice, neighbor
+                    #print nx.cycle_basis(arvore)    
+                    aux = nx.cycle_basis(arvore)
+                    ciclo = [zip(nodes,(nodes[1:]+nodes[:1])) for nodes in aux]                    
+                    if len(ciclo)>0:
+                        for aresta in ciclo[0]:  
+                            if aresta != arvore.edges([vertice,neighbor]):
                                 arvore.remove_edge(aresta[0], aresta[1])
                                 custo_parcial = calculates_cost(arvore, grafo)
                                 if custo_parcial < custo:
@@ -122,12 +123,66 @@ def refinement_heuristic(grafo, arvore, grafo_residual, custo):
     return arvore, custo
 
 
+def make_set(vertice):
+    parent[vertice] = vertice
+    rank[vertice] = 0
+def find(vertice):
+    if parent[vertice] != vertice:
+        parent[vertice] = find(parent[vertice])
+    return parent[vertice]
+def union(vertice1, vertice2):
+    root1 = find(vertice1)
+    root2 = find(vertice2)
+    if root1 != root2:
+        if rank[root1] > rank[root2]:
+            parent[root2] = root1
+        else:
+            parent[root1] = root2
+        if rank[root1] == rank[root2]:
+            rank[root2] += 1
+def kruskal(grafo):
+    peso=0
+    arestas=[]
+    for vertice in grafo.nodes():
+        make_set(vertice)
+        agm = set()
+        edges = list(grafo.edges())
+        edges.sort()
+    arestas=[]
+    for edge in edges:
+        vertice1, vertice2 = edge
+        edge = (grafo[vertice1][vertice2]['weight'],vertice1,vertice2)
+        arestas.append(edge)
+        arestas.sort()
+    #print arestas
+    for aresta in arestas:
+        pesosA,vertice1, vertice2 = aresta
+        if find(vertice1) != find(vertice2):
+            union(vertice1, vertice2)
+            agm.add(aresta)
+            peso += pesosA
+    return peso,sorted(agm)
+def return_edges_Kruskal(grafo,mst):
+    arvore = nx.Graph()
+    new_mst=[]
+    for node in grafo.nodes():
+        arvore.add_node(node,weight=grafo.node[node]['weight'])
+    for i in range(len(mst)):
+        arvore.add_edge(mst[i][1], mst[i][2])
+    for element in mst:
+        new_mst.append([element[1],element[2]])
+    return arvore,new_mst
+
+
 def main():
     os.system('cls')
     grafo = initialize()
+    peso, mst = kruskal(grafo)
+    arvore,mst = return_edges_Kruskal(grafo,mst)
     grafo_residual = grafo.copy()
-    custo, arestas_arvore, arvore, grafo = prim(grafo_residual, grafo)
-    arvore, custo = refinement_heuristic(grafo, arvore, grafo_residual, custo)
+    print 'Peso sem soma de nada da AGM', peso,'\n'
+    #custo, arestas_arvore, arvore, grafo = prim(grafo_residual, grafo)
+    arvore, custo = refinement_heuristic(grafo, arvore, grafo_residual, peso)
 
 
 if __name__ == '__main__':
