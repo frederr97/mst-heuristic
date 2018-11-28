@@ -3,6 +3,7 @@
 
 import networkx as nx
 import os
+import sys
 
 
 INF = 9999999
@@ -45,7 +46,8 @@ def initialize():
     return grafo
 
 
-def prim(grafo_residual, grafo):
+def prim(grafo):
+    grafo_residual = grafo.copy()
     arvore = nx.Graph()
     arvore.add_node(0)
     v_add = [0]
@@ -73,7 +75,7 @@ def prim(grafo_residual, grafo):
         arvore.add_edge(arestas_arvore[i][0], arestas_arvore[i][1])
 
     custo = calculates_cost(arvore, grafo)
-    print "\nO custo da AGM gerada pelo algoritmo de Prim é %d.\n" % custo
+    print "\nO custo da AGMI gerada pelo algoritmo de Prim é %d.\n" % custo
     
     return custo, arvore, grafo
 
@@ -90,62 +92,6 @@ def calculates_cost(arvore, grafo):
         custo_parcial += grafo[v1][v2]['weight']
 
     return custo_parcial            
-
-
-def refinement_heuristic(grafo, arvore, custo):
-    # Função que remolda a AGM de acordo com o a heurística
-    for vertice in range(grafo.number_of_nodes()):
-        vizinhos = list(grafo.neighbors(vertice))
-        for neighbor in range(grafo.degree(vertice)):
-            if (vertice != vizinhos[neighbor]) and (grafo.has_edge(vizinhos[neighbor], vertice)):
-                if grafo[vertice][vizinhos[neighbor]]['added'] == False:
-                    arvore.add_edge(vertice, vizinhos[neighbor])
-                    grafo[vertice][vizinhos[neighbor]]['added'] = True
-                # Verifica se a árvore possui ciclo com a nova aresta inserida
-                aux = nx.cycle_basis(arvore)
-                ciclo = [zip(nodes,(nodes[1:]+nodes[:1])) for nodes in aux]      
-                nova_aresta = None            
-                if len(ciclo) > 0:
-                    for aresta in ciclo[0]:  
-                        if (aresta != (vertice, vizinhos[neighbor])):                   # Compara se a aresta em questão é a mesma que foi inserida
-                            arvore.remove_edge(aresta[0], aresta[1])
-                            custo_parcial = calculates_cost(arvore, grafo)
-                            if custo_parcial < custo:
-                                print 'entra'
-                                custo = custo_parcial                       # Altera o custo se a AGM encontrada possuir menor custo
-                                nova_aresta = aresta
-                                arvore.add_edge(aresta[0], aresta[1])
-                            else:
-                                arvore.add_edge(aresta[0], aresta[1])       # Devolve a aresta inserida, caso o custo encontrado for maior que o atual
-                if nova_aresta != None:
-                    arvore.remove_edge(nova_aresta[0], nova_aresta[1])
-
-    print "O custo da nova AGM gerada pela heurística de refinamento considerando o peso dos vértices é %d.\n" % custo
-
-    return arvore, custo
-
-
-def make_set(vertice):
-    parent[vertice] = vertice
-    rank[vertice] = 0
-
-
-def find(vertice):
-    if parent[vertice] != vertice:
-        parent[vertice] = find(parent[vertice])
-    return parent[vertice]
-
-
-def union(vertice1, vertice2):
-    root1 = find(vertice1)
-    root2 = find(vertice2)
-    if root1 != root2:
-        if rank[root1] > rank[root2]:
-            parent[root2] = root1
-        else: 
-            parent[root1] = root2
-        if rank[root1] == rank[root2]:
-            rank[root2] += 1
 
 
 def kruskal(grafo):
@@ -181,19 +127,85 @@ def return_edges_Kruskal(grafo,mst):
     for element in mst:
         new_mst.append([element[1],element[2]])
     custo = calculates_cost(arvore,grafo)
+    print "\nO custo da AGMI gerada pelo algoritmo de Kruskal é %d.\n" % custo
     return arvore,new_mst, custo
 
 
+def make_set(vertice):
+    parent[vertice] = vertice
+    rank[vertice] = 0
+
+
+def find(vertice):
+    if parent[vertice] != vertice:
+        parent[vertice] = find(parent[vertice])
+    return parent[vertice]
+
+
+def union(vertice1, vertice2):
+    root1 = find(vertice1)
+    root2 = find(vertice2)
+    if root1 != root2:
+        if rank[root1] > rank[root2]:
+            parent[root2] = root1
+        else: 
+            parent[root1] = root2
+        if rank[root1] == rank[root2]:
+            rank[root2] += 1
+
+
+def refinement_heuristic(grafo, arvore, custo):
+    # Função que remolda a AGM de acordo com o a heurística
+    for vertice in range(grafo.number_of_nodes()):
+        vizinhos = list(grafo.neighbors(vertice))
+        for neighbor in range(grafo.degree(vertice)):
+            if (vertice != vizinhos[neighbor]) and (grafo.has_edge(vizinhos[neighbor], vertice)):
+                if grafo[vertice][vizinhos[neighbor]]['added'] == False:
+                    arvore.add_edge(vertice, vizinhos[neighbor])
+                    grafo[vertice][vizinhos[neighbor]]['added'] = True
+                # Verifica se a árvore possui ciclo com a nova aresta inserida
+                aux = nx.cycle_basis(arvore)
+                ciclo = [zip(nodes,(nodes[1:]+nodes[:1])) for nodes in aux]      
+                nova_aresta = None            
+                if len(ciclo) > 0:
+                    for aresta in ciclo[0]:  
+                        if (aresta != (vertice, vizinhos[neighbor])):                   # Compara se a aresta em questão é a mesma que foi inserida
+                            arvore.remove_edge(aresta[0], aresta[1])
+                            custo_parcial = calculates_cost(arvore, grafo)
+                            if custo_parcial < custo:
+                                custo = custo_parcial                       # Altera o custo se a AGM encontrada possuir menor custo
+                                nova_aresta = aresta
+                                arvore.add_edge(aresta[0], aresta[1])
+                            else:
+                                arvore.add_edge(aresta[0], aresta[1])       # Devolve a aresta inserida, caso o custo encontrado for maior que o atual
+                if nova_aresta != None:
+                    arvore.remove_edge(nova_aresta[0], nova_aresta[1])
+
+    print "O custo da nova AGMI gerada pela heurística de refinamento é %d.\n" % custo
+
+    return arvore, custo
+
+
 def main():
-    os.system('cls')
+    os.system('cls' if os.name == 'nt' else 'clear')
     grafo = initialize()
-    #custo, mst = kruskal(grafo)
-    #arvore,mst,custo = return_edges_Kruskal(grafo,mst)
-    #print custo
-    grafo_residual = grafo.copy()
-    custo, arvore, grafo = prim(grafo_residual, grafo)
+    os.system('cls' if os.name == 'nt' else 'clear')
+    opcao = INF
+    while opcao < 0 or opcao > 2:
+        opcao = int(raw_input("1 - Prim\n2 - Kruskal(Union and Find)\n0 - Sair\n\nInsira o número equivalente à opção do algoritmo que deseja executar como solução inicial: "))
+        if opcao == 1:
+            custo, arvore, grafo = prim(grafo)    
+        elif opcao == 2:
+            custo, mst = kruskal(grafo)
+            arvore, mst, custo = return_edges_Kruskal(grafo, mst)
+        elif opcao == 0:
+            sys.exit()
+        else:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print "\nVocê digitou uma opção inválida. Tente novamente.\n"  
+    
     arvore, custo = refinement_heuristic(grafo, arvore, custo)
     
 
 if __name__ == '__main__':
-      main()  
+      main()
