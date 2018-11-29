@@ -200,7 +200,9 @@ def main():
     while opcao < 0 or opcao > 2:
         opcao = int(raw_input("1 - Prim\n2 - Kruskal(Union and Find)\n0 - Sair\n\nInsira o número equivalente à opção do algoritmo que deseja executar como solução inicial: "))
         if opcao == 1:
-            custo, arvore, grafo = prim(grafo)    
+            custo, arvore, grafo = prim(grafo)  
+            nx.draw(arvore, pos, with_labels=True)
+            plt.show()  
         elif opcao == 2:
             custo, mst = kruskal(grafo)
             arvore, mst, custo = return_edges_Kruskal(grafo, mst)
