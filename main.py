@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import networkx as nx
+import matplotlib.pyplot as plt
 import os
 import sys
 
@@ -31,8 +32,7 @@ def initialize():
         else:
             grafo.add_node(cont)
             pos_x, pos_y, peso = linha.split()
-            grafo.node[cont]['x'] = int(pos_x)
-            grafo.node[cont]['y'] = int(pos_y)
+            grafo.node[cont]['pos'] = (int(pos_x), int(pos_y))
             grafo.node[cont]['weight'] = int(peso)
             cont += 1
     # Recebendo as arestas e seus pesos
@@ -124,6 +124,7 @@ def return_edges_Kruskal(grafo,mst):
         arvore.add_node(node,weight=grafo.node[node]['weight'])
     for i in range(len(mst)):
         arvore.add_edge(mst[i][1], mst[i][2])
+        grafo[mst[i][1]][mst[i][2]]['added'] = True
     for element in mst:
         new_mst.append([element[1],element[2]])
     custo = calculates_cost(arvore,grafo)
@@ -162,14 +163,13 @@ def refinement_heuristic(grafo, arvore, custo):
             if (vertice != vizinhos[neighbor]) and (grafo.has_edge(vizinhos[neighbor], vertice)):
                 if grafo[vertice][vizinhos[neighbor]]['added'] == False:
                     arvore.add_edge(vertice, vizinhos[neighbor])
-                    grafo[vertice][vizinhos[neighbor]]['added'] = True
                 # Verifica se a árvore possui ciclo com a nova aresta inserida
                 aux = nx.cycle_basis(arvore)
                 ciclo = [zip(nodes,(nodes[1:]+nodes[:1])) for nodes in aux]      
                 nova_aresta = None            
                 if len(ciclo) > 0:
                     for aresta in ciclo[0]:  
-                        if (aresta != (vertice, vizinhos[neighbor])):                   # Compara se a aresta em questão é a mesma que foi inserida
+                        if aresta != (vertice, vizinhos[neighbor]) or aresta != (vizinhos[neighbor], vertice):                   # Compara se a aresta em questão é a mesma que foi inserida
                             arvore.remove_edge(aresta[0], aresta[1])
                             custo_parcial = calculates_cost(arvore, grafo)
                             if custo_parcial < custo:
@@ -178,8 +178,13 @@ def refinement_heuristic(grafo, arvore, custo):
                                 arvore.add_edge(aresta[0], aresta[1])
                             else:
                                 arvore.add_edge(aresta[0], aresta[1])       # Devolve a aresta inserida, caso o custo encontrado for maior que o atual
+                
                 if nova_aresta != None:
                     arvore.remove_edge(nova_aresta[0], nova_aresta[1])
+                    grafo[vertice][vizinhos[neighbor]]['added'] = True
+                    grafo[nova_aresta[0]][nova_aresta[1]]['added'] = False
+                elif grafo[vertice][vizinhos[neighbor]]['added'] == False:
+                    arvore.remove_edge(vertice, vizinhos[neighbor])
 
     print "O custo da nova AGMI gerada pela heurística de refinamento é %d.\n" % custo
 
@@ -191,6 +196,7 @@ def main():
     grafo = initialize()
     os.system('cls' if os.name == 'nt' else 'clear')
     opcao = INF
+    pos = nx.get_node_attributes(grafo, 'pos')
     while opcao < 0 or opcao > 2:
         opcao = int(raw_input("1 - Prim\n2 - Kruskal(Union and Find)\n0 - Sair\n\nInsira o número equivalente à opção do algoritmo que deseja executar como solução inicial: "))
         if opcao == 1:
@@ -198,6 +204,8 @@ def main():
         elif opcao == 2:
             custo, mst = kruskal(grafo)
             arvore, mst, custo = return_edges_Kruskal(grafo, mst)
+            nx.draw(arvore, pos, with_labels=True)
+            plt.show()
         elif opcao == 0:
             sys.exit()
         else:
@@ -205,7 +213,8 @@ def main():
             print "\nVocê digitou uma opção inválida. Tente novamente.\n"  
     
     arvore, custo = refinement_heuristic(grafo, arvore, custo)
-    
+    nx.draw(arvore, pos, with_labels=True)
+    plt.show()
 
 if __name__ == '__main__':
       main()
