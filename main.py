@@ -60,7 +60,7 @@ def prim(grafo):
         for vertice in v_add:
             vizinhos = list(grafo_residual.neighbors(vertice))
             for neighbor in range(grafo_residual.degree(vertice)):
-                if grafo_residual[vertice][vizinhos[neighbor]]['weight'] < menor_custo:
+                if grafo_residual[vertice][vizinhos[neighbor]]['weight'] < menor_custo and (not arvore.has_node(vizinhos[neighbor])):
                     menor_custo = grafo_residual[vertice][vizinhos[neighbor]]['weight']
                     menor_aresta = ([vertice, vizinhos[neighbor]])
         arestas_arvore.append([menor_aresta[0], menor_aresta[1]])
@@ -217,6 +217,7 @@ def main():
     arvore, custo = refinement_heuristic(grafo, arvore, custo)
     nx.draw(arvore, pos, with_labels=True)
     plt.show()
+
 
 if __name__ == '__main__':
       main()
