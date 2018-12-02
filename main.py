@@ -11,10 +11,12 @@ INF = 9999999
 parent = dict()
 rank = dict()
 
+
 def initialize():
     # Leitura e exibição do diretório de entrada
     caminhos = [os.path.join("entrada/", nome) for nome in os.listdir("entrada/")]
     arquivos = [arq for arq in caminhos if os.path.isfile(arq)]
+    arquivos = sorted(arquivos)
     for i in range(len(arquivos)):
         print i, " - ", arquivos[i]
     opcao = raw_input("\nInsira o número equivalente à opção do arquivo que deseja determinar como entrada: ")
@@ -103,11 +105,13 @@ def kruskal(grafo):
         edges = list(grafo.edges())
         edges.sort()
     arestas=[]
+    # Ordena as arestas para escolher as menores posteriormente
     for edge in edges:
         vertice1, vertice2 = edge
         edge = (grafo[vertice1][vertice2]['weight'],vertice1,vertice2)
         arestas.append(edge)
         arestas.sort()
+    # Define a AGM
     for aresta in arestas:
         pesosA,vertice1, vertice2 = aresta
         if find(vertice1) != find(vertice2):
@@ -117,6 +121,7 @@ def kruskal(grafo):
     return peso,sorted(agm)
 
 
+# Soma os custos
 def return_edges_Kruskal(grafo,mst):
     arvore = nx.Graph()
     new_mst=[]
@@ -201,13 +206,9 @@ def main():
         opcao = int(raw_input("1 - Prim\n2 - Kruskal(Union and Find)\n0 - Sair\n\nInsira o número equivalente à opção do algoritmo que deseja executar como solução inicial: "))
         if opcao == 1:
             custo, arvore, grafo = prim(grafo)  
-            nx.draw(arvore, pos, with_labels=True)
-            plt.show()  
         elif opcao == 2:
             custo, mst = kruskal(grafo)
             arvore, mst, custo = return_edges_Kruskal(grafo, mst)
-            nx.draw(arvore, pos, with_labels=True)
-            plt.show()
         elif opcao == 0:
             sys.exit()
         else:
@@ -215,8 +216,6 @@ def main():
             print "\nVocê digitou uma opção inválida. Tente novamente.\n"  
     
     arvore, custo = refinement_heuristic(grafo, arvore, custo)
-    nx.draw(arvore, pos, with_labels=True)
-    plt.show()
 
 
 if __name__ == '__main__':
