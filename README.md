@@ -4,11 +4,13 @@ Trabalho prático da disciplina de Grafos onde o objetivo foi construir uma heur
 
 Para executar, execute a linha de comando abaixo em um terminal (console), com o Python2 instalado. A pasta *entrada* contém variados arquivos de entrada, onde a execução permite escolher qual deles deseja executar.
 
+<br>
+
 ```
 python main.py
 ```
 
-<br><br>
+<br>
 
 *Frederico Resende*<br/>
 *Disciplina de Grafos*<br/>
